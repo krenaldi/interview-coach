@@ -8,6 +8,8 @@ from __future__ import annotations
 from fastapi.testclient import TestClient
 
 from app.main import app
+from app.models import CategoryScore
+from app.scoring import compute_total
 
 client = TestClient(app)
 
@@ -29,9 +31,35 @@ def test_questions_unknown_round_returns_404() -> None:
     assert resp.status_code == 404
 
 
+def test_compute_total_sums_all_categories() -> None:
+    categories = [
+        CategoryScore(name=name, score=3, feedback="ok")
+        for name in [
+            "Clarifying questions", "Decomposition", "Risk identification", "Communication"
+        ]
+    ]
+    assert compute_total(categories) == 12
+
+
 def test_progress_empty() -> None:
     resp = client.get("/progress")
     assert resp.status_code == 200
     body = resp.json()
     assert body["total_attempts"] == 0
     assert body["average_score"] == 0.0
+
+
+def test_progress_with_results(monkeypatch) -> None:
+    from app import data
+
+    fake = [
+        {"round": "decomposition", "total": 10, "max": 20, "summary": ""},
+        {"round": "behavioral", "total": 14, "max": 20, "summary": ""},
+    ]
+    monkeypatch.setattr(data, "load_results", lambda: fake)
+    resp = client.get("/progress")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["total_attempts"] == 2
+    assert body["rounds_practised"] == 2
+    assert body["average_score"] == round((10 + 14) / 2, 1)

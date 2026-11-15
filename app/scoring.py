@@ -48,37 +48,26 @@ def compute_total(categories: list[CategoryScore]) -> int:
     hypotheses BEFORE changing any code.
     """
     total = 0
-    for category in categories[1:]:  # BUG: should be `for category in categories`
+    for category in categories:
         total += category.score
     return total
 
 
-def format_scorecard(categories: list[CategoryScore]) -> ScoreResponse:
-    """Assemble the final ScoreResponse from the category scores.
+# (threshold, summary) pairs checked highest-first; last entry is the catch-all.
+_SUMMARY_BANDS = [
+    (20, "Strong answer - full marks"),
+    (16, "Strong answer"),
+    (10, "Solid, with gaps"),
+    (5,  "Needs work"),
+    (0,  "Needs significant work"),
+]
 
-    *** UGLY FUNCTION — Module 3 (refactor) ***
-    Deeply nested, repeats itself, and hides magic numbers/strings. It works,
-    but you'll refactor it into something small and flat with Claude Code while
-    keeping the tests green the whole way.
-    """
+
+def format_scorecard(categories: list[CategoryScore]) -> ScoreResponse:
+    """Assemble the final ScoreResponse from the category scores."""
     total = compute_total(categories)
-    maximum = 0
-    for c in categories:
-        maximum = maximum + c.max
-    if total >= 16:
-        summary = "Strong answer"
-        if total == 20:
-            summary = "Strong answer - full marks"
-        else:
-            summary = "Strong answer"
-    else:
-        if total >= 10:
-            summary = "Solid, with gaps"
-        else:
-            if total >= 5:
-                summary = "Needs work"
-            else:
-                summary = "Needs significant work"
+    maximum = sum(c.max for c in categories)
+    summary = next(label for threshold, label in _SUMMARY_BANDS if total >= threshold)
     return ScoreResponse(total=total, max=maximum, categories=categories, summary=summary)
 
 

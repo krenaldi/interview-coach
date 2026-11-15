@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "interview-guides": {
+      "type": "stdio",
+      "command": "/Users/krisrenaldi/Desktop/Bootcamps/Kickstarter/my-coach/.venv/bin/python3",
+      "args": [
+        "mcp/server.py"
+      ],
+      "env": {}
+    }
+  }
+}

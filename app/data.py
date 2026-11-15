@@ -8,7 +8,7 @@ from __future__ import annotations
 import json
 
 from .config import DATA_DIR
-from .models import Question
+from .models import ProgressResponse, Question
 
 
 def load_rounds() -> list[str]:
@@ -36,6 +36,20 @@ def load_results() -> list[dict]:
     """Return all scored results from data/results.json."""
     path = DATA_DIR / "results.json"
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def compute_progress() -> ProgressResponse:
+    """Aggregate all scored results into a progress summary."""
+    results = load_results()
+    total_attempts = len(results)
+    rounds_practised = len({r["round"] for r in results})
+    average_score = round(sum(r["total"] for r in results) / total_attempts, 1) if results else 0.0
+    return ProgressResponse(
+        rounds_practised=rounds_practised,
+        total_attempts=total_attempts,
+        average_score=average_score,
+        max_possible=20,
+    )
 
 
 def save_result(record: dict) -> None:

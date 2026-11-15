@@ -49,20 +49,7 @@ def post_score(request: ScoreRequest) -> ScoreResponse:
     return scorecard
 
 
-@app.get("/progress")
+@app.get("/progress", response_model=ProgressResponse)
 def get_progress() -> ProgressResponse:
     """Summarise practice history from saved results."""
-    results = data.load_results()
-    if not results:
-        return ProgressResponse(
-            rounds_practised=0, total_attempts=0,
-            average_score=0.0, max_possible=20,
-        )
-    rounds = set(r["round"] for r in results)
-    totals = [r["total"] for r in results]
-    return ProgressResponse(
-        rounds_practised=len(rounds),
-        total_attempts=len(results),
-        average_score=round(sum(totals) / len(totals), 2),
-        max_possible=results[0]["max"],
-    )
+    return data.compute_progress()
